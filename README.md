@@ -66,7 +66,10 @@ Messages:
 
 ### Temperature reading on single device
 
-Each device can be requested to return its latest temperature measurement.
+[Reference page](https://doc.akka.io/docs/akka/current/typed/guide/tutorial_3.html)
+
+Each device can be requested to return its latest temperature measurement. This illustrates the *request-response 
+pattern*.
 
 Messages:
 * Request: `ReadTemperature`
