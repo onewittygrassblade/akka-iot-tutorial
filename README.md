@@ -40,8 +40,10 @@ Note: some parameters such as `requestId` are omitted for readability.
 
 ### Device registration
 
+[Reference page](https://doc.akka.io/docs/akka/current/typed/guide/tutorial_4.html)
+
 The device manager handles requests to register a new device to a specified group. If the group does not already 
-exist, it is created.
+exist, it is created (*create-on-demand* and *create-watch-terminate* patterns).
 
 Messages:
 * Request: `RequestTrackDevice(groupId, deviceId)`
