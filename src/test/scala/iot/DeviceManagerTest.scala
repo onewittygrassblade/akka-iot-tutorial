@@ -36,4 +36,29 @@ class DeviceManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       }
     }
   }
+
+  "requested to return the list of devices in a group" must {
+    "be able to list active devices" in {
+      val registeredProbe = createTestProbe[DeviceRegistered]()
+      val managerActor = spawn(DeviceManager())
+
+      managerActor ! RequestTrackDevice("group", "device1", registeredProbe.ref)
+      registeredProbe.receiveMessage()
+
+      managerActor ! RequestTrackDevice("group", "device2", registeredProbe.ref)
+      registeredProbe.receiveMessage()
+
+      val deviceListProbe = createTestProbe[ReplyDeviceList]()
+      managerActor ! RequestDeviceList(requestId = 0, groupId = "group", deviceListProbe.ref)
+      deviceListProbe.expectMessage(ReplyDeviceList(requestId = 0, Set("device1", "device2")))
+    }
+
+    "return an empty set if the group does not exist" in {
+      val deviceListProbe = createTestProbe[ReplyDeviceList]()
+      val managerActor = spawn(DeviceManager())
+
+      managerActor ! RequestDeviceList(requestId = 0, groupId = "group", deviceListProbe.ref)
+      deviceListProbe.expectMessage(ReplyDeviceList(requestId = 0, Set.empty))
+    }
+  }
 }

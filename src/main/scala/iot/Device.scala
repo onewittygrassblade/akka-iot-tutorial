@@ -15,6 +15,8 @@ object Device {
   final case class RecordTemperature(requestId: Long, value: Double, replyTo: ActorRef[TemperatureRecorded])
     extends Command
   final case class TemperatureRecorded(requestId: Long)
+
+  case object Passivate extends Command // To stop a device actor from a test
 }
 
 class Device(context: ActorContext[Device.Command], groupId: String, deviceId: String)
@@ -37,6 +39,9 @@ class Device(context: ActorContext[Device.Command], groupId: String, deviceId: S
       case ReadTemperature(requestId, replyTo) =>
         replyTo ! RespondTemperature(requestId, lastTemperatureReading)
         this
+
+      case Passivate =>
+        Behaviors.stopped
     }
   }
 

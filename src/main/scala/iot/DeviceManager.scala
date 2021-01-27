@@ -13,6 +13,10 @@ object DeviceManager {
     extends Command with DeviceGroup.Command
   final case class DeviceRegistered(device: ActorRef[Device.Command])
 
+  final case class RequestDeviceList(requestId: Long, groupId: String, replyTo: ActorRef[ReplyDeviceList])
+    extends Command with DeviceGroup.Command
+  final case class ReplyDeviceList(requestId: Long, ids: Set[String])
+
   private final case class DeviceGroupTerminated(groupId: String) extends Command  // default Terminated only provides ActorRef
 }
 
@@ -37,6 +41,15 @@ class DeviceManager(context: ActorContext[DeviceManager.Command])
             context.watchWith(groupActor, DeviceGroupTerminated(groupId))
             groupIdToActor += groupId -> groupActor
             groupActor ! trackMsg
+        }
+        this
+
+      case req @ RequestDeviceList(requestId, groupId, replyTo) =>
+        groupIdToActor.get(groupId) match {
+          case Some(ref) =>
+            ref ! req
+          case None =>
+            replyTo ! ReplyDeviceList(requestId, Set.empty)
         }
         this
 

@@ -17,7 +17,7 @@ class DeviceGroup(context: ActorContext[DeviceGroup.Command], groupId: String)
   extends AbstractBehavior[DeviceGroup.Command](context) {
 
   import DeviceGroup._
-  import DeviceManager.{RequestTrackDevice, DeviceRegistered}
+  import DeviceManager.{DeviceRegistered, ReplyDeviceList, RequestDeviceList, RequestTrackDevice}
 
   var deviceIdToActor = Map.empty[String, ActorRef[Device.Command]]
 
@@ -41,6 +41,13 @@ class DeviceGroup(context: ActorContext[DeviceGroup.Command], groupId: String)
       case RequestTrackDevice(gId, _, _) =>
         context.log.warn("Ignoring TrackDevice request for {}. This actor is responsible for {}.", gId, groupId)
         this
+
+      case RequestDeviceList(requestId, gId, replyTo) =>
+        if (gId == groupId) {
+          replyTo ! ReplyDeviceList(requestId, deviceIdToActor.keySet)
+          this
+        } else
+          Behaviors.unhandled
 
       case DeviceTerminated(_, _, deviceId) =>
         context.log.info("Device actor for {} has been terminated", deviceId)
