@@ -3,6 +3,8 @@ package iot
 import akka.actor.typed.{ActorRef, Behavior, PostStop, Signal}
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 
+import scala.concurrent.duration.DurationInt
+
 object DeviceGroup {
   def apply(groupId: String): Behavior[Command] =
     Behaviors.setup(context => new DeviceGroup(context, groupId))
@@ -17,7 +19,13 @@ class DeviceGroup(context: ActorContext[DeviceGroup.Command], groupId: String)
   extends AbstractBehavior[DeviceGroup.Command](context) {
 
   import DeviceGroup._
-  import DeviceManager.{DeviceRegistered, ReplyDeviceList, RequestDeviceList, RequestTrackDevice}
+  import DeviceManager.{
+    DeviceRegistered,
+    ReplyDeviceList,
+    RequestAllTemperatures,
+    RequestDeviceList,
+    RequestTrackDevice
+  }
 
   var deviceIdToActor = Map.empty[String, ActorRef[Device.Command]]
 
@@ -48,6 +56,14 @@ class DeviceGroup(context: ActorContext[DeviceGroup.Command], groupId: String)
           this
         } else
           Behaviors.unhandled
+
+      case RequestAllTemperatures(requestId, gId, replyTo) =>
+        if (gId == groupId) {
+          context.spawnAnonymous(DeviceGroupQuery(deviceIdToActor, requestId, replyTo, 3.seconds))
+          this
+        } else {
+          Behaviors.unhandled
+        }
 
       case DeviceTerminated(_, _, deviceId) =>
         context.log.info("Device actor for {} has been terminated", deviceId)

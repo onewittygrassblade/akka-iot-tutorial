@@ -81,16 +81,30 @@ Messages:
 
 ### Request temperature readings from all devices in a device group
 
+[Reference page](https://doc.akka.io/docs/akka/current/typed/guide/tutorial_5.html)
+
 A device group can be requested to return the temperature readings from all its devices.
 
 This case departs from the previous in that it introduces the creation of a query actor to gather the temperature 
-readings from all the devices in a group (see [the documentation](https://doc.akka.io/docs/akka/current/typed/guide/tutorial_5.html) for details).
+readings from all the devices in a group. In addition to keeping the DeviceGroup actor code clean, this allows up to:
+* Initialize the query actor with a snapshot of the existing devices, so that devices that have started after the query is fired are ignored.
+* Implement a query timeout using the built-in scheduler.
 
 Messages:
 * Request: `RequestAllTemperatures(groupId)`
 * Response: `RespondAllTemperatures(temperatures)`
 
 ![Temperature readings from all devices in a group actor flow](doc/device-group-read-all-temperatures-flow.png)
+
+The temperatures in `RespondAllTemperatures` will map a device to a `TemperatureReading` which can be one of four states:
+* `Temperature`: when the device responded with a temperature value
+* `TemperatureNotAvailable`: when the device responded but has no temperature available
+* `DeviceNotAvailable`: when the device actor stopped before responding
+* `DeviceTimedOut` when the device actor did not respond before the timeout
+
+Note: for completeness, I allowed DeviceManager to handle `RequestAllTemperatures` message as well. The behaviour is 
+similar to `RequestDeviceList`: if the group exists, it forwards the request to it; if not, it returns 
+`RespondAllTemperatures` with no temperatures readings.
 
 ## Followup plan
 

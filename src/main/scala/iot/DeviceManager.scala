@@ -17,6 +17,16 @@ object DeviceManager {
     extends Command with DeviceGroup.Command
   final case class ReplyDeviceList(requestId: Long, ids: Set[String])
 
+  final case class RequestAllTemperatures(requestId: Long, groupId: String, replyTo: ActorRef[RespondAllTemperatures])
+    extends Command with DeviceGroup.Command with DeviceGroupQuery.Command
+  final case class RespondAllTemperatures(requestId: Long, temperatures: Map[String, TemperatureReading])
+
+  sealed trait TemperatureReading
+  final case class Temperature(value: Double) extends TemperatureReading
+  case object TemperatureNotAvailable extends TemperatureReading
+  case object DeviceNotAvailable extends TemperatureReading
+  case object DeviceTimedOut extends TemperatureReading
+
   private final case class DeviceGroupTerminated(groupId: String) extends Command  // default Terminated only provides ActorRef
 }
 
@@ -50,6 +60,15 @@ class DeviceManager(context: ActorContext[DeviceManager.Command])
             ref ! req
           case None =>
             replyTo ! ReplyDeviceList(requestId, Set.empty)
+        }
+        this
+
+      case req @ RequestAllTemperatures(requestId, groupId, replyTo) =>
+        groupIdToActor.get(groupId) match {
+          case Some(ref) =>
+            ref ! req
+          case None =>
+            replyTo ! RespondAllTemperatures(requestId, Map.empty)
         }
         this
 
