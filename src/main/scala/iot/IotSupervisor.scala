@@ -1,22 +1,19 @@
 package iot
 
-import akka.actor.typed.{Behavior, PostStop, Signal}
-import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import akka.actor.typed.{Behavior, PostStop}
+import akka.actor.typed.scaladsl.Behaviors
 
 object IotSupervisor {
   def apply(): Behavior[Nothing] =
-    Behaviors.setup[Nothing](context => new IotSupervisor(context))
-}
+    Behaviors.setup[Nothing] { context =>
+      context.log.info("IoT Application started")
 
-class IotSupervisor(context: ActorContext[Nothing]) extends AbstractBehavior[Nothing](context) {
-  context.log.info("IoT Application started")
+      context.spawn(DeviceManager(), "device-manager")
 
-  override def onMessage(msg: Nothing): Behavior[Nothing] =
-    Behaviors.unhandled
-
-  override def onSignal: PartialFunction[Signal, Behavior[Nothing]] = {
-    case PostStop =>
-      context.log.info("IoT Application stopped")
-      this
-  }
+      Behaviors.receiveSignal[Nothing] {
+          case (context, PostStop) =>
+            context.log.info("IoT Application stopped")
+            Behaviors.same
+        }
+    }
 }

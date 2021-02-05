@@ -4,6 +4,9 @@ This project is based on [the tutorial example for getting started with Akka fro
 
 The plan is to reproduce the tutorial example and build on it to obtain a complete application.
 
+[This stage](https://github.com/onewittygrassblade/akka-iot-tutorial/tree/4c312c6378f373e2f909ba9f15d2fffe1df287b4) 
+of this repository history reflects the complete code of the tutorial.
+
 ## Context
 
 This project models part of an IoT system that reports temperature measurements from sensor devices grouped together 
@@ -12,13 +15,13 @@ details).
 
 ![IoT system schema from https://doc.akka.io](https://doc.akka.io/docs/akka/current/typed/guide/diagrams/arch_boxes_diagram.png)
 
-The first goal is to implement the following core logic of this design:
+The requirements of the tutorial include the following core logic of this design:
 * Register new devices into new or existing groups
 * Query a device to record the temperature
 * Query a device to return the most recent temperature reading
 * Query a device group to return the temperature readings from all devices
 
-Further goals include:
+Further requirements include:
 * Register new user
 * Integrate device protocol with user protocol
 
@@ -108,6 +111,6 @@ similar to `RequestDeviceList`: if the group exists, it forwards the request to 
 
 ## Followup plan
 
-* Refactor in functional style
+* Refactor in functional style - DONE
 * Add user protocol
 * Add HTTP server and API
