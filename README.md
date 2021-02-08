@@ -22,8 +22,9 @@ The requirements of the tutorial include the following core logic of this design
 * Query a device group to return the temperature readings from all devices
 
 Further requirements include:
-* Register new user
-* Integrate device protocol with user protocol
+* Register new dashboard
+* Active dashboards should periodically collect temperatures from the corresponding device group
+* Query a dashboard to return the latest temperaturee report
 
 ## Actor modelling
 
@@ -39,9 +40,15 @@ first part of the actor modelling follows the system's representation naturally,
 
 The various flows are represented in the following section.
 
-Note: some parameters such as `requestId` are omitted for readability. 
+Note for readability:
+* In message listings below, some parameters such as `requestId` are omitted.
+* In the schemas, message parameters are omitted.
 
-### Device registration
+### Device protocol
+
+This is the first main part of the IoT system and is detailed in the tutorial.
+
+#### Device registration
 
 [Reference page](https://doc.akka.io/docs/akka/current/typed/guide/tutorial_4.html)
 
@@ -56,7 +63,7 @@ Note: in the happy path, the device always replies with `DeviceRegistered`, whet
 
 ![Device registration actor flow](doc/device-registration-flow.png)
 
-### Device list request
+#### Device list request
 
 The device manager handles requests to return a list of registered devices in a specified group. If the group does 
 not exist, an empty set is returned.
@@ -69,7 +76,7 @@ Messages:
 
 ![Device list request actor flow for existing group](doc/device-list-group-flow.png)
 
-### Temperature reading on single device
+#### Temperature reading on single device
 
 [Reference page](https://doc.akka.io/docs/akka/current/typed/guide/tutorial_3.html)
 
@@ -82,7 +89,7 @@ Messages:
 
 ![Device temperature reading actor flow](doc/device-read-temperature-flow.png)
 
-### Request temperature readings from all devices in a device group
+#### Request temperature readings from all devices in a device group
 
 [Reference page](https://doc.akka.io/docs/akka/current/typed/guide/tutorial_5.html)
 
@@ -109,8 +116,30 @@ Note: for completeness, I allowed DeviceManager to handle `RequestAllTemperature
 similar to `RequestDeviceList`: if the group exists, it forwards the request to it; if not, it returns 
 `RespondAllTemperatures` with no temperatures readings.
 
+### Dashboard protocol
+
+This second main part of the IoT system is given high level requirements in the [introduction to the example](https://doc.akka.io/docs/akka/current/typed/guide/tutorial.html) of the tutorial.
+
+For clarity, I will assume the following behaviour:
+* A dashboard refers to one and only one device group.
+* Multiple dashboards may refer to the same dashboard.
+* Each active dashboard periodically collects temperature readings from the device group it refers to.
+* A dashboard can be queried to return the latest temperature report.
+* As a first approximation, the latest temperature report will simply be the latest temperature values.
+
+#### Dashboard registration
+
+The dashboard manager handles requests to register a new dashboard. This flow is another example of the 
+*create-on-demand* and *create-watch-terminate* patterns.
+
+Messages:
+* Request: `RequestDashboard(deviceGroupId, dashboardId)`
+* Response: `DashboardRegistered(dashboardActorRef)`
+
+![Dashboard registration actor flow](doc/dashboard-registration-flow.png)
+
 ## Followup plan
 
-* Refactor in functional style - DONE
-* Add user protocol
+* Refactor in functional style - _Done_
+* Add dashboard protocol - _In progress_
 * Add HTTP server and API

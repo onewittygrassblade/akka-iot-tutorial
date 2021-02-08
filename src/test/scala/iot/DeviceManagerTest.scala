@@ -20,6 +20,7 @@ class DeviceManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
         managerActor ! RequestTrackDevice("group", "device2", probe.ref)
         val registered2 = probe.receiveMessage()
         val deviceActor2 = registered2.device
+
         deviceActor1 should !==(deviceActor2)
       }
 
