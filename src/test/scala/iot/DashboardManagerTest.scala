@@ -10,7 +10,8 @@ class DashboardManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLik
     "requested to register a dashboard" must {
       "be able to register a new dashboard" in {
         val probe = createTestProbe[DashboardRegistered]()
-        val dashboardManager = spawn(DashboardManager())
+        val managerActor = spawn(DeviceManager())
+        val dashboardManager = spawn(DashboardManager(managerActor))
 
         dashboardManager ! RequestDashboard("group1", "dashboard1", probe.ref)
         val registered1 = probe.receiveMessage()
@@ -25,7 +26,8 @@ class DashboardManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLik
 
       "return the correct actor for already existing dashboard" in {
         val probe = createTestProbe[DashboardRegistered]()
-        val dashboardManager = spawn(DashboardManager())
+        val managerActor = spawn(DeviceManager())
+        val dashboardManager = spawn(DashboardManager(managerActor))
 
         dashboardManager ! RequestDashboard("group1", "dashboard1", probe.ref)
         val registered1 = probe.receiveMessage()

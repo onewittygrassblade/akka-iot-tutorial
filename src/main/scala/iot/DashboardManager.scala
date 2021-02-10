@@ -3,6 +3,8 @@ package iot
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior, PostStop}
 
+import scala.concurrent.duration.DurationInt
+
 object DashboardManager {
   sealed trait Command
 
@@ -12,14 +14,16 @@ object DashboardManager {
 
   private final case class DashboardTerminated(deviceGroupId: String, dashboardId: String) extends Command
 
-  def apply(): Behavior[Command] = {
+  def apply(deviceManager: ActorRef[DeviceManager.Command]): Behavior[Command] = {
     Behaviors.setup { context =>
       context.log.info("DashboardManager started")
-      processMessages(Map.empty[String, ActorRef[Dashboard.Command]])
+      processMessages(deviceManager, Map.empty[String, ActorRef[Dashboard.Command]])
     }
   }
 
-  def processMessages(dashboardIdToActor: Map[String, ActorRef[Dashboard.Command]]): Behavior[Command] =
+  def processMessages(
+                       deviceManager: ActorRef[DeviceManager.Command],
+                       dashboardIdToActor: Map[String, ActorRef[Dashboard.Command]]): Behavior[Command] =
     Behaviors.receive[Command] { (context, message) =>
       message match {
         case RequestDashboard(deviceGroupId, dashboardId, replyTo) =>
@@ -29,15 +33,17 @@ object DashboardManager {
               Behaviors.same
             case None =>
               context.log.info("Creating dashboard actor {} for group {}", dashboardId, deviceGroupId)
-              val dashboardActor = context.spawn(Dashboard(deviceGroupId, dashboardId), s"dashboard-$dashboardId")
+              val dashboardActor = context.spawn(
+                Dashboard(deviceManager, deviceGroupId, dashboardId, 10.seconds),
+                s"dashboard-$dashboardId")
               context.watchWith(dashboardActor, DashboardTerminated(deviceGroupId, dashboardId))
               replyTo ! DashboardRegistered(dashboardActor)
-              processMessages(dashboardIdToActor + (dashboardId -> dashboardActor.ref))
+              processMessages(deviceManager, dashboardIdToActor + (dashboardId -> dashboardActor.ref))
           }
 
         case DashboardTerminated(deviceGroupId, dashboardId) =>
           context.log.info("Dashboard actor {}-{} has been terminated", deviceGroupId, dashboardId)
-          processMessages(dashboardIdToActor - dashboardId)
+          processMessages(deviceManager, dashboardIdToActor - dashboardId)
       }
     }
       .receiveSignal {

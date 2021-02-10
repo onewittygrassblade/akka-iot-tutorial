@@ -6,7 +6,6 @@ import org.scalatest.wordspec.AnyWordSpecLike
 import scala.concurrent.duration.DurationInt
 
 class DeviceGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
-  import DeviceGroup._
   import DeviceManager.{
     DeviceRegistered,
     ReplyDeviceList,

@@ -85,7 +85,7 @@ pattern*.
 
 Messages:
 * Request: `ReadTemperature`
-* Response: `RespondTemperature`
+* Response: `RespondTemperature(deviceId, value)`
 
 ![Device temperature reading actor flow](doc/device-read-temperature-flow.png)
 
@@ -137,6 +137,24 @@ Messages:
 * Response: `DashboardRegistered(dashboardActorRef)`
 
 ![Dashboard registration actor flow](doc/dashboard-registration-flow.png)
+
+#### Periodic collection of device temperatures
+
+The dashboard actor uses a periodic scheduler to send `RequestAllTemperatures(groupId)` messages to the device 
+manager. For this purpose, I chose to pass a reference to the device manager actor to the dashboard manager (which 
+passes it to dashboard child actors).
+
+#### Request latest temperature report
+
+A dashboard can be requested to return the latest temperature report of the devices it monitors. As stated above, 
+this is first considered to be the latest collection of temperature values, which was returned by the most recent 
+`RespondAllTemperatures(temperatures)` message.
+
+Messages:
+* Request: `RequestLastTemperatureReport`
+* Response: `RespondLastTemperatureReport(dashboardId, deviceTemperatures)`
+
+![Temperature report request from dashboard actor flow](doc/dashboard-request-temperature-report-flow.png)
 
 ## Followup plan
 
