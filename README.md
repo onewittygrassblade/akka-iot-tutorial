@@ -5,7 +5,7 @@ This project is based on [the tutorial example for getting started with Akka fro
 The plan is to reproduce the tutorial example and build on it to obtain a complete application.
 
 [This stage](https://github.com/onewittygrassblade/akka-iot-tutorial/tree/4c312c6378f373e2f909ba9f15d2fffe1df287b4) 
-of this repository history reflects the complete code of the tutorial.
+of this repository history reflects the complete code of the tutorial without any addenda.
 
 ## Context
 
@@ -24,7 +24,7 @@ The requirements of the tutorial include the following core logic of this design
 Further requirements include:
 * Register new dashboard
 * Active dashboards should periodically collect temperatures from the corresponding device group
-* Query a dashboard to return the latest temperaturee report
+* Query a dashboard to return the latest temperature report
 
 ## Actor modelling
 
@@ -125,7 +125,8 @@ For clarity, I will assume the following behaviour:
 * Multiple dashboards may refer to the same dashboard.
 * Each active dashboard periodically collects temperature readings from the device group it refers to.
 * A dashboard can be queried to return the latest temperature report.
-* As a first approximation, the latest temperature report will simply be the latest temperature values.
+* The latest temperature report is defined as the latest 5 temperature value collections mapped to the epoch 
+  timestamp when they were recorded.
 
 #### Dashboard registration
 
@@ -144,11 +145,17 @@ The dashboard actor uses a periodic scheduler to send `RequestAllTemperatures(gr
 manager. For this purpose, I chose to pass a reference to the device manager actor to the dashboard manager (which 
 passes it to dashboard child actors).
 
+The device temperatures are stored in the dashboard actor in a map
+```scala
+deviceTemperatures: Map[Long, Map[String, TemperatureReading]]
+```
+where each map of device id to temperature reading is mapped to a timestamp. For simplicity, this timestamp is taken 
+as the current epoch when `deviceTemperatures` is updated.
+
 #### Request latest temperature report
 
-A dashboard can be requested to return the latest temperature report of the devices it monitors. As stated above, 
-this is first considered to be the latest collection of temperature values, which was returned by the most recent 
-`RespondAllTemperatures(temperatures)` message.
+A dashboard can be requested to return the latest temperature report of the devices it monitors. No alterations are 
+done to `deviceTemperatures` as it will be up to the recipient to analyse and present the data as desired.
 
 Messages:
 * Request: `RequestLastTemperatureReport`
@@ -159,5 +166,5 @@ Messages:
 ## Followup plan
 
 * Refactor in functional style - _Done_
-* Add dashboard protocol - _In progress_
+* Add dashboard protocol - _Done_
 * Add HTTP server and API

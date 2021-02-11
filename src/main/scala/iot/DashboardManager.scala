@@ -34,7 +34,7 @@ object DashboardManager {
             case None =>
               context.log.info("Creating dashboard actor {} for group {}", dashboardId, deviceGroupId)
               val dashboardActor = context.spawn(
-                Dashboard(deviceManager, deviceGroupId, dashboardId, 10.seconds),
+                Dashboard(deviceManager, deviceGroupId, dashboardId, 10.seconds, 1),
                 s"dashboard-$dashboardId")
               context.watchWith(dashboardActor, DashboardTerminated(deviceGroupId, dashboardId))
               replyTo ! DashboardRegistered(dashboardActor)

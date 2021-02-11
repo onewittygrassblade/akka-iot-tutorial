@@ -19,18 +19,19 @@ object Dashboard {
   final case class RespondLastTemperatureReport(
                                           requestId: Long,
                                           dashboardId: String,
-                                          deviceTemperatures: Map[String, TemperatureReading])
+                                          deviceTemperatures: Map[Long, Map[String, TemperatureReading]])
 
   def apply(
              deviceManager: ActorRef[DeviceManager.Command],
              deviceGroupId: String,
              dashboardId: String,
-             pollingPeriod: FiniteDuration): Behavior[Command] = {
+             pollingPeriod: FiniteDuration,
+             dataRetention: Int): Behavior[Command] = {
     Behaviors.setup { context =>
       context.log.info("Dashboard actor {}-{} started", deviceGroupId, dashboardId)
       Behaviors.withTimers { timers =>
         timers.startTimerWithFixedDelay(CollectDeviceTemperatures, pollingPeriod)
-        processMessages(deviceManager, deviceGroupId, dashboardId, Map.empty[String, TemperatureReading])
+        processMessages(deviceManager, deviceGroupId, dashboardId, dataRetention, Map.empty[Long, Map[String, TemperatureReading]])
       }
     }
   }
@@ -39,7 +40,8 @@ object Dashboard {
                        deviceManager: ActorRef[DeviceManager.Command],
                        deviceGroupId: String,
                        dashboardId: String,
-                       deviceTemperatures: Map[String, TemperatureReading]): Behavior[Command] = {
+                       dataRetention: Int,
+                       deviceTemperatures: Map[Long, Map[String, TemperatureReading]]): Behavior[Command] = {
     Behaviors.receive[Command] { (context, message) =>
       message match {
         case CollectDeviceTemperatures =>
@@ -48,7 +50,10 @@ object Dashboard {
           Behaviors.same
 
         case WrappedRespondAllTemperatures(response) =>
-          processMessages(deviceManager, deviceGroupId, dashboardId, response.temperatures)
+          val now = System.currentTimeMillis // Realistically seconds would be enough granularity, but it makes it slow to test
+          val updated = deviceTemperatures + (now -> response.temperatures)
+          val limited = if (updated.size > dataRetention) updated - updated.keys.min else updated
+          processMessages(deviceManager, deviceGroupId, dashboardId, dataRetention, limited)
 
         case RequestLastTemperatureReport(requestId, replyTo) =>
           replyTo ! RespondLastTemperatureReport(requestId, dashboardId, deviceTemperatures)
