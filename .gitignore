@@ -1,6 +1,7 @@
 *.class
 
 # sbt
+.bsp
 target
 
 # intellij
