@@ -122,10 +122,9 @@ This second main part of the IoT system is given high level requirements in the 
 
 For clarity, I am assuming the following behaviour:
 * A dashboard refers to one and only one device group.
-* Multiple dashboards may refer to the same dashboard.
-* Each active dashboard periodically collects temperature readings from the device group it refers to.
+* Each active dashboard periodically (every 10 seconds by default) collects temperature readings from the device group it refers to.
 * A dashboard can be queried to return the latest temperature report.
-* The latest temperature report is defined as the latest 5 temperature value collections mapped to the epoch 
+* The latest temperature report is defined as the latest n (5 by default) temperature value collections mapped to the epoch 
   timestamp when they were recorded.
 
 #### Dashboard registration
