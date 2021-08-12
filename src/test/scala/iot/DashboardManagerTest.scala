@@ -3,7 +3,9 @@ package iot
 import akka.actor.testkit.typed.scaladsl.ScalaTestWithActorTestKit
 import org.scalatest.wordspec.AnyWordSpecLike
 
-class DashboardManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
+class DashboardManagerTest
+    extends ScalaTestWithActorTestKit
+    with AnyWordSpecLike {
   import DashboardManager._
 
   "DashboardManager actor" when {
@@ -13,11 +15,19 @@ class DashboardManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLik
         val managerActor = spawn(DeviceManager())
         val dashboardManager = spawn(DashboardManager(managerActor))
 
-        dashboardManager ! RequestDashboard("group1", "dashboard1", probe.ref)
+        dashboardManager ! RequestDashboard(
+          deviceGroupId = "group1",
+          dashboardId = "dashboard1",
+          replyTo = probe.ref
+        )
         val registered1 = probe.receiveMessage()
         val dashboard1 = registered1.dashboard
 
-        dashboardManager ! RequestDashboard("group1", "dashboard2", probe.ref)
+        dashboardManager ! RequestDashboard(
+          deviceGroupId = "group1",
+          dashboardId = "dashboard2",
+          replyTo = probe.ref
+        )
         val registered2 = probe.receiveMessage()
         val dashboard2 = registered2.dashboard
 
@@ -29,11 +39,19 @@ class DashboardManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLik
         val managerActor = spawn(DeviceManager())
         val dashboardManager = spawn(DashboardManager(managerActor))
 
-        dashboardManager ! RequestDashboard("group1", "dashboard1", probe.ref)
+        dashboardManager ! RequestDashboard(
+          deviceGroupId = "group1",
+          dashboardId = "dashboard1",
+          replyTo = probe.ref
+        )
         val registered1 = probe.receiveMessage()
         val dashboard1 = registered1.dashboard
 
-        dashboardManager ! RequestDashboard("group1", "dashboard1", probe.ref)
+        dashboardManager ! RequestDashboard(
+          deviceGroupId = "group1",
+          dashboardId = "dashboard1",
+          replyTo = probe.ref
+        )
         val registered2 = probe.receiveMessage()
         val dashboard2 = registered2.dashboard
 

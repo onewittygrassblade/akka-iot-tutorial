@@ -96,7 +96,7 @@ Messages:
 A device group can be requested to return the temperature readings from all its devices.
 
 This case departs from the previous in that it introduces the creation of a query actor to gather the temperature 
-readings from all the devices in a group. In addition to keeping the DeviceGroup actor code clean, this allows up to:
+readings from all the devices in a group. In addition to keeping the DeviceGroup actor code clean, this allows us to:
 * Initialize the query actor with a snapshot of the existing devices, so that devices that have started after the query is fired are ignored.
 * Implement a query timeout using the built-in scheduler.
 
@@ -120,7 +120,7 @@ similar to `RequestDeviceList`: if the group exists, it forwards the request to 
 
 This second main part of the IoT system is given high level requirements in the [introduction to the example](https://doc.akka.io/docs/akka/current/typed/guide/tutorial.html) of the tutorial.
 
-For clarity, I will assume the following behaviour:
+For clarity, I am assuming the following behaviour:
 * A dashboard refers to one and only one device group.
 * Multiple dashboards may refer to the same dashboard.
 * Each active dashboard periodically collects temperature readings from the device group it refers to.

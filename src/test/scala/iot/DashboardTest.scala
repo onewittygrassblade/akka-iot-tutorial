@@ -3,14 +3,24 @@ package iot
 import akka.actor.testkit.typed.scaladsl.{ManualTime, ScalaTestWithActorTestKit}
 import org.scalatest.wordspec.AnyWordSpecLike
 
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
-class DashboardTest extends ScalaTestWithActorTestKit(ManualTime.config) with AnyWordSpecLike {
+class DashboardTest
+    extends ScalaTestWithActorTestKit(ManualTime.config)
+    with AnyWordSpecLike {
   import Dashboard._
   import Device.{RecordTemperature, TemperatureRecorded}
-  import DeviceManager.{DeviceRegistered, RequestTrackDevice, Temperature, TemperatureNotAvailable, TemperatureReading}
+  import DeviceManager.{
+    DeviceRegistered,
+    RequestTrackDevice,
+    Temperature,
+    TemperatureNotAvailable,
+    TemperatureReading
+  }
 
   val manualTime: ManualTime = ManualTime()
+  val pollingPeriod: FiniteDuration = 10.millis
+  val dataRetention: Int = 2
 
   "Dashboard actor" should {
     "periodically collect device temperatures" in {
@@ -18,43 +28,83 @@ class DashboardTest extends ScalaTestWithActorTestKit(ManualTime.config) with An
       val managerActor = spawn(DeviceManager())
 
       // Register some devices
-      managerActor ! RequestTrackDevice("group1", "device1", deviceRegisteredProbe.ref)
+      managerActor ! RequestTrackDevice(
+        groupId = "group1",
+        deviceId = "device1",
+        replyTo = deviceRegisteredProbe.ref
+      )
       val deviceActor1 = deviceRegisteredProbe.receiveMessage().device
-      managerActor ! RequestTrackDevice("group1", "device2", deviceRegisteredProbe.ref)
+      managerActor ! RequestTrackDevice(
+        groupId = "group1",
+        deviceId = "device2",
+        replyTo = deviceRegisteredProbe.ref
+      )
       val deviceActor2 = deviceRegisteredProbe.receiveMessage().device
-      managerActor ! RequestTrackDevice("group1", "device3", deviceRegisteredProbe.ref)
+      managerActor ! RequestTrackDevice(
+        groupId = "group1",
+        deviceId = "device3",
+        replyTo = deviceRegisteredProbe.ref
+      )
       deviceRegisteredProbe.receiveMessage()
 
       // Record temperatures for devices 1 and 2
       val recordProbe = createTestProbe[TemperatureRecorded]()
-      deviceActor1 ! RecordTemperature(requestId = 0, 1.0, recordProbe.ref)
+      deviceActor1 ! RecordTemperature(
+        requestId = 0,
+        value = 1.0,
+        replyTo = recordProbe.ref
+      )
       recordProbe.expectMessage(TemperatureRecorded(requestId = 0))
-      deviceActor2 ! RecordTemperature(requestId = 1, 2.0, recordProbe.ref)
+      deviceActor2 ! RecordTemperature(
+        requestId = 1,
+        value = 2.0,
+        replyTo = recordProbe.ref
+      )
       recordProbe.expectMessage(TemperatureRecorded(requestId = 1))
       // No temperature for device3
 
       // Spawn dashboard and require temperature report immediately
       val tempReportProbe = createTestProbe[RespondLastTemperatureReport]()
-      val dashboardActor = spawn(Dashboard(managerActor.ref, "group1", "dashboard1", 10.millis, 1))
-      dashboardActor ! RequestLastTemperatureReport(0, tempReportProbe.ref)
+      val dashboardActor =
+        spawn(
+          Dashboard(
+            deviceManager = managerActor.ref,
+            deviceGroupId = "group1",
+            dashboardId = "dashboard1",
+            pollingPeriod
+          )
+        )
+      dashboardActor ! RequestLastTemperatureReport(
+        requestId = 0,
+        replyTo = tempReportProbe.ref
+      )
       tempReportProbe.expectMessage(
         RespondLastTemperatureReport(
-          0,
-          "dashboard1",
-          Map.empty[Long, Map[String, TemperatureReading]]
+          requestId = 0,
+          dashboardId = "dashboard1",
+          deviceTemperatures = Map.empty[Long, Map[String, TemperatureReading]]
         )
       )
 
       // After the dashboard has collected device temperatures
-      manualTime.timePasses(11.millis)
+      manualTime.timePasses(pollingPeriod)
       tempReportProbe.awaitAssert {
-        dashboardActor ! RequestLastTemperatureReport(1, tempReportProbe.ref)
+        dashboardActor ! RequestLastTemperatureReport(
+          requestId = 1,
+          replyTo = tempReportProbe.ref
+        )
         // Cannot predict timestamp keys
         val response = tempReportProbe.receiveMessage()
         response.requestId should ===(1)
         response.dashboardId should ===("dashboard1")
         response.deviceTemperatures.values.toList should ===(
-          List(Map("device1" -> Temperature(1.0), "device2" -> Temperature(2.0), "device3" -> TemperatureNotAvailable))
+          List(
+            Map(
+              "device1" -> Temperature(1.0),
+              "device2" -> Temperature(2.0),
+              "device3" -> TemperatureNotAvailable
+            )
+          )
         )
       }
     }
@@ -64,21 +114,41 @@ class DashboardTest extends ScalaTestWithActorTestKit(ManualTime.config) with An
       val managerActor = spawn(DeviceManager())
 
       // Register a device and record a temperature
-      managerActor ! RequestTrackDevice("group1", "device1", deviceRegisteredProbe.ref)
+      managerActor ! RequestTrackDevice(
+        groupId = "group1",
+        deviceId = "device1",
+        replyTo = deviceRegisteredProbe.ref
+      )
       val deviceActor1 = deviceRegisteredProbe.receiveMessage().device
 
       val recordProbe = createTestProbe[TemperatureRecorded]()
-      deviceActor1 ! RecordTemperature(requestId = 0, 1.0, recordProbe.ref)
+      deviceActor1 ! RecordTemperature(
+        requestId = 0,
+        value = 1.0,
+        replyTo = recordProbe.ref
+      )
       recordProbe.expectMessage(TemperatureRecorded(requestId = 0))
 
       // Spawn dashboard with retention of 2 data points and gather first temperature reading
       val tempReportProbe = createTestProbe[RespondLastTemperatureReport]()
-      val dashboardActor = spawn(Dashboard(managerActor.ref, "group1", "dashboard1", 10.millis, 2))
+      val dashboardActor =
+        spawn(
+          Dashboard(
+            deviceManager = managerActor.ref,
+            deviceGroupId = "group1",
+            dashboardId = "dashboard1",
+            pollingPeriod,
+            dataRetention
+          )
+        )
 
-      manualTime.timePasses(11.millis)
+      manualTime.timePasses(pollingPeriod)
 
       tempReportProbe.awaitAssert {
-        dashboardActor ! RequestLastTemperatureReport(1, tempReportProbe.ref)
+        dashboardActor ! RequestLastTemperatureReport(
+          requestId = 1,
+          replyTo = tempReportProbe.ref
+        )
         val response = tempReportProbe.receiveMessage()
         response.requestId should ===(1)
         response.dashboardId should ===("dashboard1")
@@ -88,34 +158,54 @@ class DashboardTest extends ScalaTestWithActorTestKit(ManualTime.config) with An
       }
 
       // Record new temperature and gather second temperature reading
-      deviceActor1 ! RecordTemperature(requestId = 2, 1.5, recordProbe.ref)
+      deviceActor1 ! RecordTemperature(
+        requestId = 2,
+        value = 1.5,
+        replyTo = recordProbe.ref
+      )
       recordProbe.expectMessage(TemperatureRecorded(requestId = 2))
 
-      manualTime.timePasses(11.millis)
+      manualTime.timePasses(pollingPeriod)
 
       tempReportProbe.awaitAssert {
-        dashboardActor ! RequestLastTemperatureReport(3, tempReportProbe.ref)
+        dashboardActor ! RequestLastTemperatureReport(
+          requestId = 3,
+          replyTo = tempReportProbe.ref
+        )
         val response = tempReportProbe.receiveMessage()
         response.requestId should ===(3)
         response.dashboardId should ===("dashboard1")
         response.deviceTemperatures.values.toList should ===(
-          List(Map("device1" -> Temperature(1.0)), Map("device1" -> Temperature(1.5)))
+          List(
+            Map("device1" -> Temperature(1.0)),
+            Map("device1" -> Temperature(1.5))
+          )
         )
       }
 
       // Record new temperature and gather third temperature reading
-      deviceActor1 ! RecordTemperature(requestId = 4, 2.0, recordProbe.ref)
+      deviceActor1 ! RecordTemperature(
+        requestId = 4,
+        value = 2.0,
+        replyTo = recordProbe.ref
+      )
       recordProbe.expectMessage(TemperatureRecorded(requestId = 4))
 
-      manualTime.timePasses(11.millis)
+      manualTime.timePasses(pollingPeriod)
 
       tempReportProbe.awaitAssert {
-        dashboardActor ! RequestLastTemperatureReport(5, tempReportProbe.ref)
+        dashboardActor ! RequestLastTemperatureReport(
+          requestId = 5,
+          replyTo = tempReportProbe.ref
+        )
         val response = tempReportProbe.receiveMessage()
         response.requestId should ===(5)
         response.dashboardId should ===("dashboard1")
         response.deviceTemperatures.values.toList should ===(
-          List(Map("device1" -> Temperature(1.5)), Map("device1" -> Temperature(2.0)))
+          List(
+            Map("device1" -> Temperature(1.5)),
+            Map("device1" -> Temperature(2.0))
+          )
         )
       }
     }
