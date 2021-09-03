@@ -1,3 +1,6 @@
+![CI](https://github.com/onewittygrassblade/akka-iot-tutorial/actions/workflows/ci.yml/badge.svg)
+[![codecov](https://codecov.io/gh/onewittygrassblade/akka-iot-tutorial/branch/main/graph/badge.svg?token=RQ1C5BRHZH)](https://codecov.io/gh/onewittygrassblade/akka-iot-tutorial)
+
 # Akka IoT Tutorial
 
 This project is based on [the tutorial example for getting started with Akka from the official documentation](https://doc.akka.io/docs/akka/current/typed/guide/tutorial.html).
