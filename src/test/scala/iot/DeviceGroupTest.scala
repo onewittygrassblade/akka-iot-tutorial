@@ -21,7 +21,7 @@ class DeviceGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   "DeviceGroup actor" when {
     "requested to register a device" must {
       "be able to register a new device" in {
-        val probe = createTestProbe[DeviceRegistered]()
+        val probe      = createTestProbe[DeviceRegistered]()
         val groupActor = spawn(DeviceGroup(groupId = "group"))
 
         groupActor ! RequestTrackDevice(
@@ -29,7 +29,7 @@ class DeviceGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
           deviceId = "device1",
           replyTo = probe.ref
         )
-        val registered1 = probe.receiveMessage()
+        val registered1  = probe.receiveMessage()
         val deviceActor1 = registered1.device
 
         groupActor ! RequestTrackDevice(
@@ -37,7 +37,7 @@ class DeviceGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
           deviceId = "device2",
           replyTo = probe.ref
         )
-        val registered2 = probe.receiveMessage()
+        val registered2  = probe.receiveMessage()
         val deviceActor2 = registered2.device
         deviceActor1 should !==(deviceActor2)
 
@@ -58,7 +58,7 @@ class DeviceGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       }
 
       "return the correct actor for already existing devices" in {
-        val probe = createTestProbe[DeviceRegistered]()
+        val probe      = createTestProbe[DeviceRegistered]()
         val groupActor = spawn(DeviceGroup(groupId = "group"))
 
         groupActor ! RequestTrackDevice(
@@ -79,7 +79,7 @@ class DeviceGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
       }
 
       "ignore requests with a wrong groupId" in {
-        val probe = createTestProbe[DeviceRegistered]()
+        val probe      = createTestProbe[DeviceRegistered]()
         val groupActor = spawn(DeviceGroup(groupId = "group"))
 
         groupActor ! RequestTrackDevice(
@@ -95,7 +95,7 @@ class DeviceGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   "requested to return the list of devices" must {
     "be able to list active devices" in {
       val registeredProbe = createTestProbe[DeviceRegistered]()
-      val groupActor = spawn(DeviceGroup(groupId = "group"))
+      val groupActor      = spawn(DeviceGroup(groupId = "group"))
 
       groupActor ! RequestTrackDevice(
         groupId = "group",
@@ -124,7 +124,7 @@ class DeviceGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
     "be able to list active devices after one shuts down" in {
       val registeredProbe = createTestProbe[DeviceRegistered]()
-      val groupActor = spawn(DeviceGroup(groupId = "group"))
+      val groupActor      = spawn(DeviceGroup(groupId = "group"))
 
       groupActor ! RequestTrackDevice(
         groupId = "group",
@@ -132,7 +132,7 @@ class DeviceGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
         replyTo = registeredProbe.ref
       )
       val registered1 = registeredProbe.receiveMessage()
-      val toShutDown = registered1.device
+      val toShutDown  = registered1.device
 
       groupActor ! RequestTrackDevice(
         groupId = "group",
@@ -175,7 +175,7 @@ class DeviceGroupTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   "requested to collect temperatures from all active devices" must {
     "be able to return a collection with a temperature response for each device" in {
       val registeredProbe = createTestProbe[DeviceRegistered]()
-      val groupActor = spawn(DeviceGroup(groupId = "group"))
+      val groupActor      = spawn(DeviceGroup(groupId = "group"))
 
       groupActor ! RequestTrackDevice(
         groupId = "group",

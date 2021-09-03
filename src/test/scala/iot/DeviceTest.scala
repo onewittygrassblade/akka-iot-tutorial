@@ -23,7 +23,7 @@ class DeviceTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
     "requested to provide the temperature reading" must {
       "reply with empty reading if no temperature is known" in {
-        val readProbe = createTestProbe[RespondTemperature]()
+        val readProbe   = createTestProbe[RespondTemperature]()
         val deviceActor = spawn(Device(groupId = "group", deviceId = "device"))
 
         deviceActor ! ReadTemperature(requestId = 1, replyTo = readProbe.ref)
@@ -34,7 +34,7 @@ class DeviceTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
       "reply with the temperature value if it is known" in {
         val recordProbe = createTestProbe[TemperatureRecorded]()
-        val readProbe = createTestProbe[RespondTemperature]()
+        val readProbe   = createTestProbe[RespondTemperature]()
         val deviceActor = spawn(Device(groupId = "group", deviceId = "device"))
 
         deviceActor ! RecordTemperature(

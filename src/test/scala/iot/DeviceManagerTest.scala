@@ -10,7 +10,7 @@ class DeviceManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   "DeviceManager actor" when {
     "requested to register a device" must {
       "be able to register a new device" in {
-        val probe = createTestProbe[DeviceRegistered]()
+        val probe        = createTestProbe[DeviceRegistered]()
         val managerActor = spawn(DeviceManager())
 
         managerActor ! RequestTrackDevice(
@@ -18,7 +18,7 @@ class DeviceManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
           deviceId = "device1",
           replyTo = probe.ref
         )
-        val registered1 = probe.receiveMessage()
+        val registered1  = probe.receiveMessage()
         val deviceActor1 = registered1.device
 
         managerActor ! RequestTrackDevice(
@@ -26,14 +26,14 @@ class DeviceManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
           deviceId = "device2",
           replyTo = probe.ref
         )
-        val registered2 = probe.receiveMessage()
+        val registered2  = probe.receiveMessage()
         val deviceActor2 = registered2.device
 
         deviceActor1 should !==(deviceActor2)
       }
 
       "return the correct actor for already existing devices" in {
-        val probe = createTestProbe[DeviceRegistered]()
+        val probe        = createTestProbe[DeviceRegistered]()
         val managerActor = spawn(DeviceManager())
 
         managerActor ! RequestTrackDevice(
@@ -58,7 +58,7 @@ class DeviceManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   "requested to return the list of devices in a group" must {
     "be able to list active devices" in {
       val registeredProbe = createTestProbe[DeviceRegistered]()
-      val managerActor = spawn(DeviceManager())
+      val managerActor    = spawn(DeviceManager())
 
       managerActor ! RequestTrackDevice(
         groupId = "group",
@@ -87,7 +87,7 @@ class DeviceManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
 
     "return an empty set if the group does not exist" in {
       val deviceListProbe = createTestProbe[ReplyDeviceList]()
-      val managerActor = spawn(DeviceManager())
+      val managerActor    = spawn(DeviceManager())
 
       managerActor ! RequestDeviceList(
         requestId = 0,
@@ -103,7 +103,7 @@ class DeviceManagerTest extends ScalaTestWithActorTestKit with AnyWordSpecLike {
   "requested to collect temperatures from all active devices in a group" must {
     "be able to return a collection with a temperature response for each device" in {
       val registeredProbe = createTestProbe[DeviceRegistered]()
-      val managerActor = spawn(DeviceManager())
+      val managerActor    = spawn(DeviceManager())
 
       // Create 3 device actors
       managerActor ! RequestTrackDevice(

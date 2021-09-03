@@ -10,22 +10,16 @@ class DashboardTest
     with AnyWordSpecLike {
   import Dashboard._
   import Device.{RecordTemperature, TemperatureRecorded}
-  import DeviceManager.{
-    DeviceRegistered,
-    RequestTrackDevice,
-    Temperature,
-    TemperatureNotAvailable,
-    TemperatureReading
-  }
+  import DeviceManager.{DeviceRegistered, RequestTrackDevice, Temperature, TemperatureNotAvailable, TemperatureReading}
 
-  private val manualTime: ManualTime = ManualTime()
+  private val manualTime: ManualTime        = ManualTime()
   private val pollingPeriod: FiniteDuration = 10.millis
-  private val dataRetention: Int = 2
+  private val dataRetention: Int            = 2
 
-  private val managerActor = spawn(DeviceManager())
+  private val managerActor          = spawn(DeviceManager())
   private val deviceRegisteredProbe = createTestProbe[DeviceRegistered]()
-  private val recordProbe = createTestProbe[TemperatureRecorded]()
-  private val tempReportProbe = createTestProbe[RespondLastTemperatureReport]()
+  private val recordProbe           = createTestProbe[TemperatureRecorded]()
+  private val tempReportProbe       = createTestProbe[RespondLastTemperatureReport]()
 
   "Dashboard actor" should {
     "periodically collect device temperatures" in {

@@ -39,9 +39,9 @@ object DeviceManager {
 
   sealed trait TemperatureReading
   final case class Temperature(value: Double) extends TemperatureReading
-  case object TemperatureNotAvailable extends TemperatureReading
-  case object DeviceNotAvailable extends TemperatureReading
-  case object DeviceTimedOut extends TemperatureReading
+  case object TemperatureNotAvailable         extends TemperatureReading
+  case object DeviceNotAvailable              extends TemperatureReading
+  case object DeviceTimedOut                  extends TemperatureReading
 
   private final case class DeviceGroupTerminated(groupId: String)
       extends Command // default Terminated only provides ActorRef

@@ -21,7 +21,7 @@ class DashboardManagerTest
           replyTo = probe.ref
         )
         val registered1 = probe.receiveMessage()
-        val dashboard1 = registered1.dashboard
+        val dashboard1  = registered1.dashboard
 
         dashboardManager ! RequestDashboard(
           deviceGroupId = "group1",
@@ -29,7 +29,7 @@ class DashboardManagerTest
           replyTo = probe.ref
         )
         val registered2 = probe.receiveMessage()
-        val dashboard2 = registered2.dashboard
+        val dashboard2  = registered2.dashboard
 
         dashboard1 should !==(dashboard2)
       }
@@ -41,7 +41,7 @@ class DashboardManagerTest
           replyTo = probe.ref
         )
         val registered1 = probe.receiveMessage()
-        val dashboard1 = registered1.dashboard
+        val dashboard1  = registered1.dashboard
 
         dashboardManager ! RequestDashboard(
           deviceGroupId = "group1",
@@ -49,7 +49,7 @@ class DashboardManagerTest
           replyTo = probe.ref
         )
         val registered2 = probe.receiveMessage()
-        val dashboard2 = registered2.dashboard
+        val dashboard2  = registered2.dashboard
 
         dashboard1 should ===(dashboard2)
       }

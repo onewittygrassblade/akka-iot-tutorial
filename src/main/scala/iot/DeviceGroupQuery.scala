@@ -10,7 +10,7 @@ object DeviceGroupQuery {
   private case object CollectionTimeout extends Command
   final case class WrappedRespondTemperature(
       response: Device.RespondTemperature
-  ) extends Command
+  )                                                           extends Command
   private final case class DeviceTerminated(deviceId: String) extends Command
 
   def apply(
