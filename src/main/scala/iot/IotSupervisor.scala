@@ -8,13 +8,13 @@ object IotSupervisor {
     Behaviors.setup[Nothing] { context =>
       context.log.info("IoT Application started")
 
-      val deviceManager = context.spawn(DeviceManager(), "device-manager")
-      context.spawn(DashboardManager(deviceManager), "dashboard-manager")
+      context.spawn(DeviceManager(), "device-manager")
+      context.spawn(DashboardManager(), "dashboard-manager")
 
       Behaviors.receiveSignal[Nothing] {
-          case (context, PostStop) =>
-            context.log.info("IoT Application stopped")
-            Behaviors.same
-        }
+        case (context, PostStop) =>
+          context.log.info("IoT Application stopped")
+          Behaviors.same
+      }
     }
 }

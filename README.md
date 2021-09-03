@@ -141,8 +141,7 @@ Messages:
 #### Periodic collection of device temperatures
 
 The dashboard actor uses a periodic scheduler to send `RequestAllTemperatures(groupId)` messages to the device 
-manager. For this purpose, I chose to pass a reference to the device manager actor to the dashboard manager (which 
-passes it to dashboard child actors).
+manager. For this purpose, I am using [Akka's Receptionist](https://doc.akka.io/docs/akka/current/typed/actor-discovery.html#receptionist) to discover the device manager actor from the dashboard actors.
 
 The device temperatures are stored in the dashboard actor in a map
 ```scala

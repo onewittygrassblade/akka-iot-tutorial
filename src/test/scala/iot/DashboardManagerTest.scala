@@ -8,13 +8,13 @@ class DashboardManagerTest
     with AnyWordSpecLike {
   import DashboardManager._
 
+  private val probe = createTestProbe[DashboardRegistered]()
+  spawn(DeviceManager())
+  private val dashboardManager = spawn(DashboardManager())
+
   "DashboardManager actor" when {
     "requested to register a dashboard" must {
       "be able to register a new dashboard" in {
-        val probe = createTestProbe[DashboardRegistered]()
-        val managerActor = spawn(DeviceManager())
-        val dashboardManager = spawn(DashboardManager(managerActor))
-
         dashboardManager ! RequestDashboard(
           deviceGroupId = "group1",
           dashboardId = "dashboard1",
@@ -35,10 +35,6 @@ class DashboardManagerTest
       }
 
       "return the correct actor for already existing dashboard" in {
-        val probe = createTestProbe[DashboardRegistered]()
-        val managerActor = spawn(DeviceManager())
-        val dashboardManager = spawn(DashboardManager(managerActor))
-
         dashboardManager ! RequestDashboard(
           deviceGroupId = "group1",
           dashboardId = "dashboard1",

@@ -19,20 +19,16 @@ object DashboardManager {
       dashboardId: String
   ) extends Command
 
-  def apply(
-      deviceManager: ActorRef[DeviceManager.Command]
-  ): Behavior[Command] =
+  def apply(): Behavior[Command] =
     Behaviors.setup { context =>
       context.log.info("DashboardManager started")
-      new DashboardManager(deviceManager).processMessages(
+      new DashboardManager().processMessages(
         Map.empty[String, ActorRef[Dashboard.Command]]
       )
     }
 }
 
-class DashboardManager private (
-    deviceManager: ActorRef[DeviceManager.Command]
-) {
+class DashboardManager private () {
   import DashboardManager._
 
   private def processMessages(
@@ -54,7 +50,6 @@ class DashboardManager private (
                 )
                 val dashboardActor = context.spawn(
                   Dashboard(
-                    deviceManager,
                     deviceGroupId,
                     dashboardId
                   ),

@@ -1,9 +1,12 @@
 package iot
 
+import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import akka.actor.typed.{ActorRef, Behavior, PostStop}
 import akka.actor.typed.scaladsl.Behaviors
 
 object DeviceManager {
+  val DeviceManagerKey = ServiceKey[Command]("deviceManager")
+
   sealed trait Command
 
   final case class RequestTrackDevice(
@@ -46,6 +49,10 @@ object DeviceManager {
   def apply(): Behavior[Command] =
     Behaviors.setup { context =>
       context.log.info("DeviceManager started")
+      context.system.receptionist ! Receptionist.Register(
+        DeviceManagerKey,
+        context.self
+      )
       processMessages(Map.empty[String, ActorRef[DeviceGroup.Command]])
     }
 

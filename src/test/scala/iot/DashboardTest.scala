@@ -18,15 +18,17 @@ class DashboardTest
     TemperatureReading
   }
 
-  val manualTime: ManualTime = ManualTime()
-  val pollingPeriod: FiniteDuration = 10.millis
-  val dataRetention: Int = 2
+  private val manualTime: ManualTime = ManualTime()
+  private val pollingPeriod: FiniteDuration = 10.millis
+  private val dataRetention: Int = 2
+
+  private val managerActor = spawn(DeviceManager())
+  private val deviceRegisteredProbe = createTestProbe[DeviceRegistered]()
+  private val recordProbe = createTestProbe[TemperatureRecorded]()
+  private val tempReportProbe = createTestProbe[RespondLastTemperatureReport]()
 
   "Dashboard actor" should {
     "periodically collect device temperatures" in {
-      val deviceRegisteredProbe = createTestProbe[DeviceRegistered]()
-      val managerActor = spawn(DeviceManager())
-
       // Register some devices
       managerActor ! RequestTrackDevice(
         groupId = "group1",
@@ -48,7 +50,6 @@ class DashboardTest
       deviceRegisteredProbe.receiveMessage()
 
       // Record temperatures for devices 1 and 2
-      val recordProbe = createTestProbe[TemperatureRecorded]()
       deviceActor1 ! RecordTemperature(
         requestId = 0,
         value = 1.0,
@@ -64,11 +65,9 @@ class DashboardTest
       // No temperature for device3
 
       // Spawn dashboard and require temperature report immediately
-      val tempReportProbe = createTestProbe[RespondLastTemperatureReport]()
       val dashboardActor =
         spawn(
           Dashboard(
-            deviceManager = managerActor.ref,
             deviceGroupId = "group1",
             dashboardId = "dashboard1",
             pollingPeriod
@@ -110,18 +109,14 @@ class DashboardTest
     }
 
     "store only the most recent temperature readings" in {
-      val deviceRegisteredProbe = createTestProbe[DeviceRegistered]()
-      val managerActor = spawn(DeviceManager())
-
       // Register a device and record a temperature
       managerActor ! RequestTrackDevice(
-        groupId = "group1",
+        groupId = "group2",
         deviceId = "device1",
         replyTo = deviceRegisteredProbe.ref
       )
       val deviceActor1 = deviceRegisteredProbe.receiveMessage().device
 
-      val recordProbe = createTestProbe[TemperatureRecorded]()
       deviceActor1 ! RecordTemperature(
         requestId = 0,
         value = 1.0,
@@ -130,12 +125,10 @@ class DashboardTest
       recordProbe.expectMessage(TemperatureRecorded(requestId = 0))
 
       // Spawn dashboard with retention of 2 data points and gather first temperature reading
-      val tempReportProbe = createTestProbe[RespondLastTemperatureReport]()
       val dashboardActor =
         spawn(
           Dashboard(
-            deviceManager = managerActor.ref,
-            deviceGroupId = "group1",
+            deviceGroupId = "group2",
             dashboardId = "dashboard1",
             pollingPeriod,
             dataRetention

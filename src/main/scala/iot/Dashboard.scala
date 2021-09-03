@@ -1,5 +1,6 @@
 package iot
 
+import akka.actor.typed.receptionist.Receptionist
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.typed.scaladsl.Behaviors
 import iot.DeviceManager.{RequestAllTemperatures, TemperatureReading}
@@ -9,6 +10,8 @@ import scala.concurrent.duration.{DurationInt, FiniteDuration}
 object Dashboard {
   trait Command
   private case object CollectDeviceTemperatures extends Command
+  private case class ListingResponse(listing: Receptionist.Listing)
+      extends Command
   final case class WrappedRespondAllTemperatures(
       response: DeviceManager.RespondAllTemperatures
   ) extends Command
@@ -22,15 +25,14 @@ object Dashboard {
       deviceTemperatures: Map[Long, Map[String, TemperatureReading]]
   )
 
-  final val defaultPollingPeriod = 10.seconds
-  final val defaultDataRetention = 5
+  private val DefaultPollingPeriod = 10.seconds
+  private val DefaultDataRetention = 5
 
   def apply(
-      deviceManager: ActorRef[DeviceManager.Command],
       deviceGroupId: String,
       dashboardId: String,
-      pollingPeriod: FiniteDuration = defaultPollingPeriod,
-      dataRetention: Int = defaultDataRetention
+      pollingPeriod: FiniteDuration = DefaultPollingPeriod,
+      dataRetention: Int = DefaultDataRetention
   ): Behavior[Command] =
     Behaviors.setup { context =>
       context.log.info(
@@ -43,7 +45,7 @@ object Dashboard {
           CollectDeviceTemperatures,
           pollingPeriod
         )
-        new Dashboard(deviceManager, deviceGroupId, dashboardId, dataRetention)
+        new Dashboard(deviceGroupId, dashboardId, dataRetention)
           .processMessages(
             Map.empty[Long, Map[String, TemperatureReading]]
           )
@@ -52,7 +54,6 @@ object Dashboard {
 }
 
 class Dashboard private (
-    deviceManager: ActorRef[DeviceManager.Command],
     deviceGroupId: String,
     dashboardId: String,
     dataRetention: Int
@@ -65,13 +66,24 @@ class Dashboard private (
     Behaviors.receive[Command] { (context, message) =>
       message match {
         case CollectDeviceTemperatures =>
-          val respondAllTemperaturesAdapter =
-            context.messageAdapter(WrappedRespondAllTemperatures.apply)
-          deviceManager ! RequestAllTemperatures(
-            requestId = 0,
-            groupId = deviceGroupId,
-            replyTo = respondAllTemperaturesAdapter
+          context.system.receptionist ! Receptionist.Find(
+            DeviceManager.DeviceManagerKey,
+            context.messageAdapter[Receptionist.Listing](ListingResponse)
           )
+          Behaviors.same
+
+        case ListingResponse(DeviceManager.DeviceManagerKey.Listing(listing)) =>
+          if (listing.size > 1)
+            context.log.error("More than one DeviceManager actors found")
+          else {
+            val respondAllTemperaturesAdapter =
+              context.messageAdapter(WrappedRespondAllTemperatures.apply)
+            listing.head ! RequestAllTemperatures(
+              requestId = 0,
+              groupId = deviceGroupId,
+              replyTo = respondAllTemperaturesAdapter
+            )
+          }
           Behaviors.same
 
         case WrappedRespondAllTemperatures(response) =>
