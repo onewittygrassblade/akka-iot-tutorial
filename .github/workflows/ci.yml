@@ -6,6 +6,7 @@ on:
 
 jobs:
   test:
+    name: Tests
     runs-on: ubuntu-latest
     steps:
       -  uses: actions/checkout@v2
@@ -18,8 +19,9 @@ jobs:
         with:
           fail_ci_if_error: true
   lint:
+    name: Formatting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Formatting
+      - name: scalafmtCheck
         run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
