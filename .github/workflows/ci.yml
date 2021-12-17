@@ -24,4 +24,4 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: scalafmtCheck
-        run: sbt scalafmtSbtCheck scalafmtCheck test:scalafmtCheck
+        run: sbt scalafmtSbtCheck scalafmtCheck Test/scalafmtCheck
