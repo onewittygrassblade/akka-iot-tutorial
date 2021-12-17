@@ -1,4 +1,4 @@
-![CI](https://github.com/onewittygrassblade/akka-iot-tutorial/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/onewittygrassblade/akka-iot-tutorial/actions/workflows/ci.yml/badge.svg)](https://github.com/onewittygrassblade/akka-iot-tutorial/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/onewittygrassblade/akka-iot-tutorial/branch/main/graph/badge.svg?token=RQ1C5BRHZH)](https://codecov.io/gh/onewittygrassblade/akka-iot-tutorial)
 
 # Akka IoT Tutorial
